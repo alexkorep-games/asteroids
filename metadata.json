@@ -1,0 +1,6 @@
+{
+  "name": "Retro Asteroids",
+  "description": "A retro Asteroids game in the style of DOS games from the 1980s, built with React, TypeScript, and Tailwind CSS. Control your ship, shoot asteroids, and try to get the highest score!",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
