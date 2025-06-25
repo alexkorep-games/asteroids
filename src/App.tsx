@@ -254,10 +254,19 @@ const App: React.FC = () => {
   }, [joystick.active, joystick.touchId, isTouchThrusting, thrustTouchId]);
 
 
+  // Ref to store the last frame's timestamp
+  const lastFrameTimeRef = useRef(performance.now());
+
   useEffect(() => {
     if (gameState !== GameState.Playing) return;
 
-    const gameLoop = () => {
+    const gameLoop = (now = performance.now()) => {
+      // Calculate delta time in seconds
+      const last = lastFrameTimeRef.current;
+      let delta = (now - last) / 1000;
+      // Clamp delta to avoid spiral of death on tab switch
+      if (delta > 0.1) delta = 0.0167; // ~60 FPS
+      lastFrameTimeRef.current = now;
       setPlayer(p => {
         let newVx = p.velocityX;
         let newVy = p.velocityY;
@@ -276,49 +285,49 @@ const App: React.FC = () => {
             joystickTookOverRotation = true;
           }
         }
-        
+
         if (!joystickTookOverRotation) {
-            if (keysPressed[KEY_BINDINGS.ROTATE_LEFT]) {
-                newAngle -= PLAYER_ROTATION_SPEED;
-            }
-            if (keysPressed[KEY_BINDINGS.ROTATE_RIGHT]) {
-                newAngle += PLAYER_ROTATION_SPEED;
-            }
+          if (keysPressed[KEY_BINDINGS.ROTATE_LEFT]) {
+            newAngle -= PLAYER_ROTATION_SPEED * delta * 60;
+          }
+          if (keysPressed[KEY_BINDINGS.ROTATE_RIGHT]) {
+            newAngle += PLAYER_ROTATION_SPEED * delta * 60;
+          }
         }
-        
+
         const shouldThrust = isTouchThrusting || keysPressed[KEY_BINDINGS.THRUST];
-        
+
         if (shouldThrust) {
-            isActuallyThrustingVisual = true;
-            const thrustAngleRad = degToRad(newAngle - 90);
-            newVx += PLAYER_THRUST * Math.cos(thrustAngleRad);
-            newVy += PLAYER_THRUST * Math.sin(thrustAngleRad);
+          isActuallyThrustingVisual = true;
+          const thrustAngleRad = degToRad(newAngle - 90);
+          newVx += PLAYER_THRUST * Math.cos(thrustAngleRad) * delta * 60;
+          newVy += PLAYER_THRUST * Math.sin(thrustAngleRad) * delta * 60;
         }
-        
+
         const speed = Math.sqrt(newVx * newVx + newVy * newVy);
         if (speed > PLAYER_MAX_SPEED) {
           newVx = (newVx / speed) * PLAYER_MAX_SPEED;
           newVy = (newVy / speed) * PLAYER_MAX_SPEED;
         }
 
-        newVx *= PLAYER_DRAG;
-        newVy *= PLAYER_DRAG;
-        
+        newVx *= Math.pow(PLAYER_DRAG, delta * 60);
+        newVy *= Math.pow(PLAYER_DRAG, delta * 60);
+
         const newP = {
           ...p,
-          x: p.x + newVx,
-          y: p.y + newVy,
+          x: p.x + newVx * delta * 60,
+          y: p.y + newVy * delta * 60,
           velocityX: newVx,
           velocityY: newVy,
           angle: (newAngle % 360 + 360) % 360,
           isThrusting: isActuallyThrustingVisual,
-          invincibleTimer: Math.max(0, p.invincibleTimer - 1)
+          invincibleTimer: Math.max(0, p.invincibleTimer - delta * 60)
         };
         wrapScreen(newP, dimensions.width, dimensions.height);
         return newP;
       });
 
-      if (bulletCooldownTimer === 0) {
+      if (bulletCooldownTimer <= 0) {
         setBulletCooldownTimer(BULLET_COOLDOWN);
         setBullets(prev => {
           const bulletAngleRad = degToRad(player.angle - 90);
@@ -335,17 +344,27 @@ const App: React.FC = () => {
           return [...prev, newBullet];
         });
       }
-      setBulletCooldownTimer(prev => Math.max(0, prev -1));
+      setBulletCooldownTimer(prev => Math.max(0, prev - delta * 60));
 
       setBullets(prevBullets =>
         prevBullets
-          .map(b => ({ ...b, x: b.x + b.velocityX, y: b.y + b.velocityY, life: b.life - 1 }))
+          .map(b => ({
+            ...b,
+            x: b.x + b.velocityX * delta * 60,
+            y: b.y + b.velocityY * delta * 60,
+            life: b.life - delta * 60
+          }))
           .filter(b => b.life > 0 && b.x > -b.radius && b.x < dimensions.width + b.radius && b.y > -b.radius && b.y < dimensions.height + b.radius)
       );
       
       setAsteroids(prevAsteroids =>
         prevAsteroids.map(a => {
-          const newA = { ...a, x: a.x + a.velocityX, y: a.y + a.velocityY, angle: (a.angle + a.rotationSpeed + 360) % 360 };
+          const newA = {
+            ...a,
+            x: a.x + a.velocityX * delta * 60,
+            y: a.y + a.velocityY * delta * 60,
+            angle: (a.angle + a.rotationSpeed * delta * 60 + 360) % 360
+          };
           wrapScreen(newA, dimensions.width, dimensions.height);
           return newA;
         })
