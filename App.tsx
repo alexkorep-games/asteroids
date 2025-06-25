@@ -40,12 +40,6 @@ const App: React.FC = () => {
   const [bulletCooldownTimer, setBulletCooldownTimer] = useState<number>(0);
   const [currentWave, setCurrentWave] = useState<number>(1);
 
-  const FIXED_JOYSTICK_PADDING = 30; // SVG units
-  const fixedJoystickBasePoint: Point = {
-    x: dimensions.width - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING,
-    y: dimensions.height - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING
-  };
-
   const [joystick, setJoystick] = useState<JoystickState>({
     active: false,
     touchId: null,
@@ -189,8 +183,8 @@ const App: React.FC = () => {
                         active: true,
                         touchId: touch.identifier,
                         anchorPoint: svgInitialTouchPoint,
-                        visualBase: fixedJoystickBasePoint, 
-                        nub: fixedJoystickBasePoint,        
+                        visualBase: svgInitialTouchPoint, 
+                        nub: svgInitialTouchPoint,        
                         delta: { x: 0, y: 0 },
                     });
                 }
@@ -202,36 +196,36 @@ const App: React.FC = () => {
             }
         }
     });
-  }, [gameState, getSVGCoordinates, startGame, joystick.active, joystick.touchId, isTouchThrusting, thrustTouchId, fixedJoystickBasePoint]);
+  }, [gameState, getSVGCoordinates, startGame, joystick.active, joystick.touchId, isTouchThrusting, thrustTouchId]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
     Array.from(e.changedTouches).forEach(touch => {
         if (joystick.active && joystick.touchId === touch.identifier && joystick.anchorPoint && joystick.visualBase) {
             const currentSvgTouchPoint = getSVGCoordinates(touch.clientX, touch.clientY);
             if (currentSvgTouchPoint) {
-                const touchMovementX = currentSvgTouchPoint.x - joystick.anchorPoint.x;
-                const touchMovementY = currentSvgTouchPoint.y - joystick.anchorPoint.y;
-
-                let dx_from_visualBase = touchMovementX;
-                let dy_from_visualBase = touchMovementY;
+                const dx_from_visualBase = currentSvgTouchPoint.x - joystick.visualBase.x;
+                const dy_from_visualBase = currentSvgTouchPoint.y - joystick.visualBase.y;
 
                 const distance_from_visualBase = Math.sqrt(dx_from_visualBase * dx_from_visualBase + dy_from_visualBase * dy_from_visualBase);
                 const maxDeltaConstraint = JOYSTICK_BASE_RADIUS * JOYSTICK_MAX_DELTA_RATIO;
 
+                let constrained_dx = dx_from_visualBase;
+                let constrained_dy = dy_from_visualBase;
+
                 if (distance_from_visualBase > maxDeltaConstraint) {
-                    dx_from_visualBase = (dx_from_visualBase / distance_from_visualBase) * maxDeltaConstraint;
-                    dy_from_visualBase = (dy_from_visualBase / distance_from_visualBase) * maxDeltaConstraint;
+                    constrained_dx = (dx_from_visualBase / distance_from_visualBase) * maxDeltaConstraint;
+                    constrained_dy = (dy_from_visualBase / distance_from_visualBase) * maxDeltaConstraint;
                 }
                 
-                const finalNubX = joystick.visualBase.x + dx_from_visualBase;
-                const finalNubY = joystick.visualBase.y + dy_from_visualBase;
+                const finalNubX = joystick.visualBase.x + constrained_dx;
+                const finalNubY = joystick.visualBase.y + constrained_dy;
                 
                 setJoystick(j => {
                     if (!j.visualBase || !j.anchorPoint) return j; 
                     return {
                         ...j,
                         nub: { x: finalNubX, y: finalNubY },
-                        delta: { x: dx_from_visualBase, y: dy_from_visualBase },
+                        delta: { x: constrained_dx, y: constrained_dy },
                     };
                 });
             }
