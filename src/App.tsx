@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Player, Asteroid, Bullet, GameState, KeysPressed, Point, JoystickState, HeartPowerUp } from './types';
-import PlayerShip from './components/PlayerShip';
-import AsteroidObject from './components/AsteroidObject';
-import BulletObject from './components/BulletObject';
-import GameUI from './components/GameUI';
-import VirtualJoystick from './components/VirtualJoystick';
-import HeartPowerUpObject from './components/HeartPowerUpObject';
+import { Player, Asteroid, Bullet, GameState, KeysPressed, Point, JoystickState, HeartPowerUp } from './features/game/state/types';
+import PlayerShip from './features/game/components/PlayerShip';
+import AsteroidObject from './features/game/components/AsteroidObject';
+import BulletObject from './features/game/components/BulletObject';
+import GameUI from './features/game/components/GameUI';
+import VirtualJoystick from './features/game/components/VirtualJoystick';
+import HeartPowerUpObject from './features/game/components/HeartPowerUpObject';
 import {
   PLAYER_SIZE, PLAYER_THRUST, PLAYER_MAX_SPEED, PLAYER_ROTATION_SPEED, PLAYER_DRAG, PLAYER_INVINCIBILITY_DURATION,
   BULLET_SPEED, BULLET_RADIUS, BULLET_LIFESPAN, BULLET_COOLDOWN,
@@ -14,7 +14,7 @@ import {
   JOYSTICK_BASE_RADIUS, JOYSTICK_NUB_RADIUS, JOYSTICK_MAX_DELTA_RATIO, JOYSTICK_DEAD_ZONE_RATIO,
   HEART_DROP_CHANCE, HEART_RADIUS, HEART_LIFESPAN
 } from './constants';
-import { degToRad, generateId, wrapScreen, createAsteroid, checkCollision } from './utils/gameHelpers';
+import { degToRad, generateId, wrapScreen, createAsteroid, checkCollision } from './features/game/utils/gameHelpers';
 
 const App: React.FC = () => {
   const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });

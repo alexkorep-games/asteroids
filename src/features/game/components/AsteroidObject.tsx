@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Asteroid } from '../types';
-import { SVG_ASTEROID_FILL_COLOR, SVG_STROKE_COLOR } from '../constants';
+import { Asteroid } from '../state/types';
+import { SVG_ASTEROID_FILL_COLOR, SVG_STROKE_COLOR } from '../../../constants';
 
 interface AsteroidObjectProps {
   asteroid: Asteroid;

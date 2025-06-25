@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Bullet } from '../types';
-import { SVG_BULLET_FILL_COLOR, SVG_STROKE_COLOR } from '../constants';
+import { Bullet } from '../state/types';
+import { SVG_BULLET_FILL_COLOR, SVG_STROKE_COLOR } from '../../../constants';
 
 interface BulletObjectProps {
   bullet: Bullet;

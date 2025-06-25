@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { GameState } from '../types';
-import { TEXT_COLOR, KEY_BINDINGS } from '../constants';
+import { GameState } from '../state/types';
+import { TEXT_COLOR, KEY_BINDINGS } from '../../../constants';
 
 interface GameUIProps {
   score: number;

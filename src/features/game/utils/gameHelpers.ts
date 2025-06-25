@@ -1,6 +1,6 @@
 
-import { Point, Asteroid, GameObject } from '../types';
-import { ASTEROID_SIZES, ASTEROID_JAGGEDNESS } from '../constants';
+import { Point, Asteroid, GameObject } from '../state/types';
+import { ASTEROID_SIZES, ASTEROID_JAGGEDNESS } from '../../../constants';
 
 export const degToRad = (degrees: number): number => degrees * (Math.PI / 180);
 
@@ -49,7 +49,7 @@ export const checkCollision = (obj1: GameObject, obj2: GameObject): boolean => {
   const dx = obj1.x - obj2.x;
   const dy = obj1.y - obj2.y;
   const distance = Math.sqrt(dx * dx + dy * dy);
-  return distance < obj1.radius + obj2.radius;
+  return distance <= obj1.radius + obj2.radius;
 };
 
 // Polygon representation for player ship, pointing upwards (0, -PLAYER_SIZE/2)

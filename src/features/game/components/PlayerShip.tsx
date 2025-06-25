@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Player } from '../types';
-import { PLAYER_SIZE, SVG_PLAYER_FILL_COLOR, SVG_STROKE_COLOR } from '../constants';
+import { Player } from '../state/types';
+import { PLAYER_SIZE, SVG_PLAYER_FILL_COLOR, SVG_STROKE_COLOR } from '../../../constants';
 import { getPlayerPolygon } from '../utils/gameHelpers';
 
 interface PlayerShipProps {

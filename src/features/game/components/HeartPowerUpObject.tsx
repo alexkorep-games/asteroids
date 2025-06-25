@@ -1,6 +1,6 @@
 import React from 'react';
-import { HeartPowerUp } from '../types';
-import { HEART_RADIUS, SVG_HEART_FILL_CLASS, SVG_STROKE_COLOR } from '../constants';
+import { HeartPowerUp } from '../state/types';
+import { HEART_RADIUS, SVG_HEART_FILL_CLASS, SVG_STROKE_COLOR } from '../../../constants';
 
 interface HeartPowerUpObjectProps {
   heart: HeartPowerUp;
