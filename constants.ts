@@ -25,7 +25,7 @@ export const NEW_WAVE_ASTEROID_INCREMENT = 1;
 
 
 export const INITIAL_LIVES = 3;
-export const MAX_LIVES = 5; // Maximum lives a player can have
+export const MAX_LIVES = 16; // Maximum lives a player can have
 
 export const TEXT_COLOR = "text-lime-400"; // Classic DOS green
 export const BORDER_COLOR = "border-lime-400";
