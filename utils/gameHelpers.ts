@@ -1,16 +1,16 @@
 
 import { Point, Asteroid, GameObject } from '../types';
-import { GAME_WIDTH, GAME_HEIGHT, ASTEROID_SIZES, ASTEROID_JAGGEDNESS } from '../constants';
+import { ASTEROID_SIZES, ASTEROID_JAGGEDNESS } from '../constants';
 
 export const degToRad = (degrees: number): number => degrees * (Math.PI / 180);
 
 export const generateId = (): string => `id-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-export const wrapScreen = (obj: GameObject): void => {
-  if (obj.x < -obj.radius) obj.x = GAME_WIDTH + obj.radius;
-  if (obj.x > GAME_WIDTH + obj.radius) obj.x = -obj.radius;
-  if (obj.y < -obj.radius) obj.y = GAME_HEIGHT + obj.radius;
-  if (obj.y > GAME_HEIGHT + obj.radius) obj.y = -obj.radius;
+export const wrapScreen = (obj: GameObject, width: number, height: number): void => {
+  if (obj.x < -obj.radius) obj.x = width + obj.radius;
+  if (obj.x > width + obj.radius) obj.x = -obj.radius;
+  if (obj.y < -obj.radius) obj.y = height + obj.radius;
+  if (obj.y > height + obj.radius) obj.y = -obj.radius;
 };
 
 export const generateAsteroidVertices = (radius: number, numVertices: number): Point[] => {
@@ -26,15 +26,15 @@ export const generateAsteroidVertices = (radius: number, numVertices: number): P
   return vertices;
 };
 
-export const createAsteroid = (size: number, x?: number, y?: number, initialVelocityX?: number, initialVelocityY?: number): Asteroid => {
+export const createAsteroid = (size: number, width: number, height: number, x?: number, y?: number, initialVelocityX?: number, initialVelocityY?: number): Asteroid => {
   const config = ASTEROID_SIZES[size];
   const angle = Math.random() * 360;
   const speed = config.minSpeed + Math.random() * (config.maxSpeed - config.minSpeed);
   
   return {
     id: generateId(),
-    x: x ?? Math.random() * GAME_WIDTH,
-    y: y ?? Math.random() * GAME_HEIGHT,
+    x: x ?? Math.random() * width,
+    y: y ?? Math.random() * height,
     velocityX: initialVelocityX ?? Math.cos(degToRad(angle)) * speed,
     velocityY: initialVelocityY ?? Math.sin(degToRad(angle)) * speed,
     angle: Math.random() * 360,

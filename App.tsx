@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Player, Asteroid, Bullet, GameState, KeysPressed, Point, JoystickState, HeartPowerUp } from './types';
 import PlayerShip from './components/PlayerShip';
@@ -8,7 +7,7 @@ import GameUI from './components/GameUI';
 import VirtualJoystick from './components/VirtualJoystick';
 import HeartPowerUpObject from './components/HeartPowerUpObject';
 import {
-  GAME_WIDTH, GAME_HEIGHT, PLAYER_SIZE, PLAYER_THRUST, PLAYER_MAX_SPEED, PLAYER_ROTATION_SPEED, PLAYER_DRAG, PLAYER_INVINCIBILITY_DURATION,
+  PLAYER_SIZE, PLAYER_THRUST, PLAYER_MAX_SPEED, PLAYER_ROTATION_SPEED, PLAYER_DRAG, PLAYER_INVINCIBILITY_DURATION,
   BULLET_SPEED, BULLET_RADIUS, BULLET_LIFESPAN, BULLET_COOLDOWN,
   ASTEROID_SIZES, INITIAL_ASTEROID_COUNT, MAX_ASTEROIDS_PER_WAVE_BASE, NEW_WAVE_ASTEROID_INCREMENT,
   INITIAL_LIVES, MAX_LIVES, TEXT_COLOR, KEY_BINDINGS,
@@ -18,11 +17,12 @@ import {
 import { degToRad, generateId, wrapScreen, createAsteroid, checkCollision } from './utils/gameHelpers';
 
 const App: React.FC = () => {
+  const [dimensions, setDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [gameState, setGameState] = useState<GameState>(GameState.StartScreen);
   const [player, setPlayer] = useState<Player>({
     id: generateId(),
-    x: GAME_WIDTH / 2,
-    y: GAME_HEIGHT / 2,
+    x: dimensions.width / 2,
+    y: dimensions.height / 2,
     velocityX: 0,
     velocityY: 0,
     angle: 0,
@@ -42,8 +42,8 @@ const App: React.FC = () => {
 
   const FIXED_JOYSTICK_PADDING = 30; // SVG units
   const fixedJoystickBasePoint: Point = {
-    x: GAME_WIDTH - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING,
-    y: GAME_HEIGHT - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING
+    x: dimensions.width - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING,
+    y: dimensions.height - JOYSTICK_BASE_RADIUS - FIXED_JOYSTICK_PADDING
   };
 
   const [joystick, setJoystick] = useState<JoystickState>({
@@ -59,6 +59,14 @@ const App: React.FC = () => {
 
   const gameAreaRef = useRef<SVGSVGElement>(null);
   const mainContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
 
   const getSVGCoordinates = useCallback((clientX: number, clientY: number): Point | null => {
@@ -84,8 +92,8 @@ const App: React.FC = () => {
   const resetPlayer = useCallback(() => {
     setPlayer({
       id: generateId(),
-      x: GAME_WIDTH / 2,
-      y: GAME_HEIGHT / 2,
+      x: dimensions.width / 2,
+      y: dimensions.height / 2,
       velocityX: 0,
       velocityY: 0,
       angle: 0,
@@ -94,19 +102,19 @@ const App: React.FC = () => {
       rotationDirection: 0,
       invincibleTimer: PLAYER_INVINCIBILITY_DURATION,
     });
-  }, []);
+  }, [dimensions]);
   
   const spawnAsteroids = useCallback((count: number) => {
     const newAsteroids: Asteroid[] = [];
     const safeZoneRadius = PLAYER_SIZE * 5; 
-    const playerInitialX = GAME_WIDTH / 2;
-    const playerInitialY = GAME_HEIGHT / 2;
+    const playerInitialX = dimensions.width / 2;
+    const playerInitialY = dimensions.height / 2;
 
     for (let i = 0; i < count; i++) {
       let newAst: Asteroid;
       let attempts = 0;
       do {
-        newAst = createAsteroid(3);
+        newAst = createAsteroid(3, dimensions.width, dimensions.height);
         attempts++;
         if (attempts > 50) { 
             console.warn("Failed to place asteroid away from player after 50 attempts.");
@@ -124,7 +132,7 @@ const App: React.FC = () => {
       newAsteroids.push(newAst);
     }
     setAsteroids(prev => [...prev, ...newAsteroids]);
-  }, []);
+  }, [dimensions]);
 
   const startGame = useCallback(() => {
     setScore(0);
@@ -312,7 +320,7 @@ const App: React.FC = () => {
           isThrusting: isActuallyThrustingVisual,
           invincibleTimer: Math.max(0, p.invincibleTimer - 1)
         };
-        wrapScreen(newP);
+        wrapScreen(newP, dimensions.width, dimensions.height);
         return newP;
       });
 
@@ -338,13 +346,13 @@ const App: React.FC = () => {
       setBullets(prevBullets =>
         prevBullets
           .map(b => ({ ...b, x: b.x + b.velocityX, y: b.y + b.velocityY, life: b.life - 1 }))
-          .filter(b => b.life > 0 && b.x > -b.radius && b.x < GAME_WIDTH + b.radius && b.y > -b.radius && b.y < GAME_HEIGHT + b.radius)
+          .filter(b => b.life > 0 && b.x > -b.radius && b.x < dimensions.width + b.radius && b.y > -b.radius && b.y < dimensions.height + b.radius)
       );
       
       setAsteroids(prevAsteroids =>
         prevAsteroids.map(a => {
           const newA = { ...a, x: a.x + a.velocityX, y: a.y + a.velocityY, angle: (a.angle + a.rotationSpeed + 360) % 360 };
-          wrapScreen(newA);
+          wrapScreen(newA, dimensions.width, dimensions.height);
           return newA;
         })
       );
@@ -381,7 +389,7 @@ const App: React.FC = () => {
                   const kickSpeed = ASTEROID_SIZES[childSize].minSpeed * 0.5;
                   const newVelX = asteroid.velocityX * 0.8 + Math.cos(randomAngle) * kickSpeed;
                   const newVelY = asteroid.velocityY * 0.8 + Math.sin(randomAngle) * kickSpeed;
-                  newAsteroidsFromCollisions.push(createAsteroid(childSize, asteroid.x, asteroid.y, newVelX, newVelY));
+                  newAsteroidsFromCollisions.push(createAsteroid(childSize, dimensions.width, dimensions.height, asteroid.x, asteroid.y, newVelX, newVelY));
                 }
               }
             }
@@ -415,7 +423,7 @@ const App: React.FC = () => {
                     const kickSpeed = ASTEROID_SIZES[childSize].minSpeed * 0.5;
                     const newVelX = asteroid.velocityX * 0.8 + Math.cos(randomAngle) * kickSpeed;
                     const newVelY = asteroid.velocityY * 0.8 + Math.sin(randomAngle) * kickSpeed;
-                    newAsteroidsFromCollisions.push(createAsteroid(childSize, asteroid.x, asteroid.y, newVelX, newVelY));
+                    newAsteroidsFromCollisions.push(createAsteroid(childSize, dimensions.width, dimensions.height, asteroid.x, asteroid.y, newVelX, newVelY));
                 }
             }
 
@@ -485,7 +493,8 @@ const App: React.FC = () => {
     BULLET_COOLDOWN, BULLET_LIFESPAN, BULLET_RADIUS, BULLET_SPEED, PLAYER_SIZE,
     ASTEROID_SIZES,
     INITIAL_ASTEROID_COUNT, NEW_WAVE_ASTEROID_INCREMENT, MAX_ASTEROIDS_PER_WAVE_BASE, PLAYER_INVINCIBILITY_DURATION,
-    HEART_DROP_CHANCE, HEART_LIFESPAN, HEART_RADIUS, MAX_LIVES, KEY_BINDINGS // Added KEY_BINDINGS for completeness though it's const
+    HEART_DROP_CHANCE, HEART_LIFESPAN, HEART_RADIUS, MAX_LIVES, KEY_BINDINGS, // Added KEY_BINDINGS for completeness though it's const
+    dimensions
   ]); 
 
   const BORDER_COLOR_CLASS = TEXT_COLOR === "text-lime-400" ? "border-lime-600" : "border-amber-600";
@@ -493,7 +502,7 @@ const App: React.FC = () => {
   return (
     <div 
          ref={mainContainerRef}
-         className={`fixed inset-0 flex items-center justify-center bg-black ${TEXT_COLOR} font-dos select-none overflow-hidden touch-none`}
+         className={`fixed inset-x-0 top-0 bottom-0 flex items-center justify-center bg-black ${TEXT_COLOR} font-dos select-none overflow-hidden touch-none py-4`}
          aria-label="Retro Asteroids Game" role="application"
          onTouchStart={handleTouchStart}
          onTouchMove={handleTouchMove}
@@ -502,7 +511,7 @@ const App: React.FC = () => {
     >
       <svg
         ref={gameAreaRef}
-        viewBox={`0 0 ${GAME_WIDTH} ${GAME_HEIGHT}`}
+        viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
         className={`${TEXT_COLOR} bg-black border-2 ${BORDER_COLOR_CLASS} max-w-full max-h-full w-auto h-auto`}
         preserveAspectRatio="xMidYMid meet"
         shapeRendering="optimizeSpeed" 
@@ -528,8 +537,8 @@ const App: React.FC = () => {
             nubRadius={JOYSTICK_NUB_RADIUS}
           />
         )}
+        <GameUI score={score} lives={lives} gameState={gameState} wave={currentWave} />
       </svg>
-      <GameUI score={score} lives={lives} gameState={gameState} wave={currentWave} />
     </div>
   );
 };

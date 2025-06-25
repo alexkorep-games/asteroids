@@ -1,6 +1,3 @@
-export const GAME_WIDTH = 800;
-export const GAME_HEIGHT = 600;
-
 export const PLAYER_SIZE = 20; // Effectively the radius for collision and base for drawing
 export const PLAYER_THRUST = 0.1; // Max thrust power
 export const PLAYER_MAX_SPEED = 4;
